@@ -1,15 +1,15 @@
-const CACHE_NAME = 'kampo-v1';
-const ASSETS = [
-  './',
+const CACHE_NAME = 'kampo-v8';
+const HTML_FALLBACK = './index.html';
+const PRECACHE_ASSETS = [
   './index.html',
-  './manifest.json',
+  './manifest.json?v=8',
   './icon-192.png',
   './icon-512.png'
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_ASSETS))
   );
   self.skipWaiting();
 });
@@ -24,7 +24,45 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
-  );
+  if (e.request.method !== 'GET') return;
+
+  if (isHtmlRequest(e.request)) {
+    e.respondWith(networkFirstHtml(e.request));
+    return;
+  }
+
+  e.respondWith(cacheFirstAsset(e.request));
 });
+
+function isHtmlRequest(request) {
+  return request.mode === 'navigate' ||
+    (request.headers.get('accept') || '').includes('text/html');
+}
+
+function networkFirstHtml(request) {
+  return fetch(request)
+    .then(response => {
+      if (response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(HTML_FALLBACK, copy));
+      }
+      return response;
+    })
+    .catch(() =>
+      caches.match(request).then(cached => cached || caches.match(HTML_FALLBACK))
+    );
+}
+
+function cacheFirstAsset(request) {
+  return caches.match(request).then(cached => {
+    if (cached) return cached;
+
+    return fetch(request).then(response => {
+      if (response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+      }
+      return response;
+    });
+  });
+}
