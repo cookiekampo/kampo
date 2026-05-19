@@ -1,8 +1,8 @@
-const CACHE_NAME = 'kampo-v8';
+const CACHE_NAME = 'kampo-v9';
 const HTML_FALLBACK = './index.html';
 const PRECACHE_ASSETS = [
   './index.html',
-  './manifest.json?v=8',
+  './manifest.json?v=9',
   './icon-192.png',
   './icon-512.png'
 ];
