@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>漢方処方選択システム</title>
-<link rel="manifest" href="manifest.json?v=10">
+<link rel="manifest" href="manifest.json?v=11">
 <meta name="theme-color" content="#1a1208">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -605,7 +605,7 @@
     padding: 11px 12px;
     border: 1.5px solid var(--border);
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 16px;
     font-family: var(--font-sans);
     outline: none;
     background: var(--paper);
@@ -646,26 +646,17 @@
     border-radius: 6px;
     background: var(--paper);
     color: var(--ink);
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
     font-family: var(--font-sans);
     text-align: left;
-    transition: all 0.2s;
   }
 
   .formula-condition.is-extra { display: none; }
 
   .formula-card.expanded .formula-condition.is-extra { display: flex; }
-
-  .formula-condition:hover,
-  .formula-condition:focus-visible {
-    border-color: var(--gold);
-    background: var(--selected-bg);
-    outline: none;
-  }
 
   .formula-condition-main {
     font-size: 12px;
@@ -966,7 +957,7 @@
     <div class="card-subtitle">キーワード入力 または 下の分類から選択</div>
     <div style="display:flex;gap:8px;margin-bottom:6px">
       <input type="text" id="searchInput" placeholder="例：高血圧、冷え性、胃炎…"
-        style="flex:1;min-width:0;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font-sans);outline:none;background:var(--paper);color:var(--ink)"
+        style="flex:1;min-width:0;padding:11px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;font-family:var(--font-sans);outline:none;background:var(--paper);color:var(--ink)"
         oninput="liveSearch(this.value)"
         onfocus="this.style.borderColor='var(--gold)'"
         onblur="this.style.borderColor='var(--border)'">
@@ -1147,7 +1138,6 @@ const FORMULA_TYPE_MAP = { yh: ['薬方', 'tag-yakuho'], ym: ['薬味', 'tag-yak
 const FORMULA_GROUP_PAGE_SIZE = 30;
 let formulaVisibleLimit = FORMULA_GROUP_PAGE_SIZE;
 let lastFormulaQuery = '';
-let formulaReturnState = null;
 
 function escapeHtml(value) {
   if (value == null) return '';
@@ -1377,12 +1367,6 @@ function displayFormulaResults(groups, rowCount, q) {
     });
   });
 
-  list.querySelectorAll('.formula-condition').forEach(button => {
-    button.addEventListener('click', () => {
-      selectFormulaCondition(button.dataset.cat, button.dataset.sym);
-    });
-  });
-
   list.querySelectorAll('.formula-toggle').forEach(button => {
     button.addEventListener('click', () => {
       const card = button.closest('.formula-card');
@@ -1434,12 +1418,12 @@ function renderFormulaCard(group) {
     const extraClass = index >= visibleConditionLimit ? ' is-extra' : '';
 
     return `
-    <button type="button" class="formula-condition${extraClass}" data-cat="${escapeHtml(condition.cat)}" data-sym="${escapeHtml(condition.sym)}">
+    <div class="formula-condition${extraClass}">
       <span class="formula-condition-main">
         <span class="formula-condition-label">${escapeHtml(condition.cat)} › ${escapeHtml(condition.sym)}</span>
         ${frequencyHtml}
       </span>
-    </button>
+    </div>
   `;
   }).join('');
 
@@ -1463,18 +1447,6 @@ function clearFormulaSearch() {
     <p>処方名を入力してください。</p>
   </div>`;
 }
-
-function selectFormulaCondition(cat, sym) {
-  const query = document.getElementById('formulaSearchInput').value.trim();
-  formulaReturnState = {
-    query,
-    scrollY: window.scrollY,
-    label: `${cat} › ${sym}`
-  };
-  selectFromSearch(cat, sym);
-}
-
-
 
 function selectCategory(cat, el) {
   state.category = cat;
@@ -1636,9 +1608,7 @@ function updateHeaderNav() {
     const disabled = currentStep === 1;
     let label = '戻る';
 
-    if (formulaReturnState && currentStep === 3) {
-      label = '処方検索結果へ戻る';
-    } else if (currentStep === 'formula' || currentStep === 2) {
+    if (currentStep === 'formula' || currentStep === 2) {
       label = 'ホームへ戻る';
     } else if (currentStep >= 4) {
       label = '条件へ戻る';
@@ -1670,8 +1640,6 @@ function resetFilterChips() {
 function goHeaderBack() {
   if (currentStep === 'formula') {
     goHome();
-  } else if (formulaReturnState && currentStep === 3) {
-    returnToFormulaSearch();
   } else if (currentStep >= 4) {
     goStep(3);
   } else if (currentStep === 3) {
@@ -1685,7 +1653,6 @@ function goHome() {
   state.category = null;
   state.symptom = null;
   state.filters = {};
-  formulaReturnState = null;
   currentStep = 1;
 
   clearSearch();
@@ -1701,23 +1668,6 @@ function goHome() {
   resetFilterChips();
   hideMemoPopup();
   goStep(1);
-}
-
-function returnToFormulaSearch() {
-  const saved = formulaReturnState;
-  showFormulaSearch();
-
-  if (saved?.query) {
-    const input = document.getElementById('formulaSearchInput');
-    if (input.value !== saved.query) {
-      input.value = saved.query;
-      liveFormulaSearch(saved.query);
-    }
-  }
-
-  setTimeout(() => {
-    window.scrollTo({ top: saved?.scrollY || 0, behavior: 'auto' });
-  }, 0);
 }
 
 function goStep(n) {
