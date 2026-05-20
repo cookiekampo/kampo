@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>漢方処方選択システム</title>
-<link rel="manifest" href="manifest.json?v=9">
+<link rel="manifest" href="manifest.json?v=10">
 <meta name="theme-color" content="#1a1208">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -687,12 +687,6 @@
     color: var(--ink);
     flex: 0 0 auto;
     font-size: 13px;
-    white-space: nowrap;
-  }
-
-  .formula-condition-action {
-    color: var(--gold);
-    font-size: 11px;
     white-space: nowrap;
   }
 
@@ -1445,7 +1439,6 @@ function renderFormulaCard(group) {
         <span class="formula-condition-label">${escapeHtml(condition.cat)} › ${escapeHtml(condition.sym)}</span>
         ${frequencyHtml}
       </span>
-      <span class="formula-condition-action">この病名/症候から探す</span>
     </button>
   `;
   }).join('');
